@@ -202,6 +202,6 @@ _____________________________
 ## **Conclusion**
 </div>
 
-After the completion of these 4 tasks, which greatly depended on building relationships between tables, I was able to learn and understand the concept of primary keys, foreign keys, constraints, joins and alters. Through this document, I was also able to demonstrate and perform the assigned tasks, which helped me gain a lot of practical understanding of PostgreSQL and SQL.
+After the completion of these 3 tasks, I was able to better understand the process of creating PostgreSQL databases using Docker Containers and was also able to learn mre about taking data backups using `pg_dump`. I also learnt about Replication of PostgreSQL databases.
 
 --------
