@@ -10,12 +10,12 @@ ________________________________________________________________________________
 ## Contents
 </div>
 
-- [PostgresSQL: Assignment 5](#postgressql-assignment-5)
-    - [— A Task Documentation by Yash Anand—](#-a-task-documentation-by-yash-anand)
-  - [Contents](#contents)
-- [**Overview**](#overview)
   - [**Prerequisites**](#prerequisites)
   - [**Task 1: Creation Of Database**](#task-1-creation-of-database)
+  - [1.1 Populating Data](#11-populating-data)
+  - [**Task 2: Second DB \& Restoring**](#task-2-second-db--restoring)
+  - [2.1 Importing From First Database](#21-importing-from-first-database)
+  - [**Task 3: DB Replication**](#task-2-second-db--restoring)
   - [**Conclusion**](#conclusion)
  
 _____________________________________________________________________________________      
@@ -93,6 +93,7 @@ Once the `CREATE TABLE` output had been displayed after running the above query,
 
  ![image](https://i.imgur.com/j69IPgB.png)
  </div>
+
 ______________
 
 ## 1.1 Populating Data
@@ -120,24 +121,83 @@ In order to ensure that the data had been successfuly entered into the table, ev
 SELECT * FROM grocery_register;
 ```
 Output:
-
  <div align="center">
 
  ![image](https://i.imgur.com/qf4zkTd.png)
  </div>
  Given that the table displayed as the result of the above query contained all the data that had been populated in it earlier, I concluded that the first task had therefore been completed.
+
 _____________________________
 
 <div align="center">
 
-## **Task 2: **
+## **Task 2: Second DB & Restoring**
 </div>
 
-> Set up a container for Database 1 and assign a port.   
+> Create Database 2 within a separate container using a
+different port.
 
+As per the second task, we were to create a new database inside of a separate container than the previous one. In order to do so, I first ran the following command for creating a new container called `grocery_db2`, with new ports assigned to it:
+```
+docker run -d -p 5433:5432 --name grocery_db2 -e POSTGRES_PASSWORD=a postgres
+```  
+Using the above command, I was able to successfully create the required container, which was displayed as proof in the output of the `docker ps` command.
+Output:
+ <div align="center">
 
+ ![image](https://i.imgur.com/qf4zkTd.png)
+ </div>
 
+To ensure that the postgres was using the same port defined in its container, I modified its `postgresql.conf` file by changing the listening port from `5432` to `5433`. This modification was done by copying the configuration file from `/var/lib/postgresql/data/postgresql.conf` to my base machine using `docker cp grocery_db2:/var/lib/postgresql/data/postgresql.conf`.
+
+Once I had changed the listening port in the copied `postgresql.conf` file, I copied it back to its original location in the container using `docker cp postgresql.conf grocery_db2:/var/lib/postgresql/data/postgresql.conf`. To ensure that the ports had truly been changed for the PostgreSQL server, I ran the following query:
+```
+docker exec -ti grocery_db2 psql -U postgres -p 5433
+```
+Output:
+ <div align="center">
+
+ ![image](https://i.imgur.com/JX353UN.png)
+ </div>
+____________________________________________
+ 
+
+## 2.1 Importing From First Database
+
+> Import the data from the earlier database into
+Database 2.
+
+Before I could import the data from the first database of `grocery_db1`, I needed to create its dump file along with the second database in the second container of `grocery_db2`. In order to do so, I first created a database inside of the second container using `docker exec -ti grocery_db2 psql -U postgres` and then `CREATE DATABASE grocery_db2`. 
+Output:
+ <div align="center">
+
+ ![image](https://i.imgur.com/Ys5Q6HD.png)
+ </div>
+
+Afterwards, I exited from the container and ran the following command from my base machine for taking a backup of the data from the `grocery_db1`:
+```
+ docker exec -t grocery_db1 pg_dump -U postgres -h localhost -p 5432 grocery_db1 > ./db1dump.sql
+```
+Running the above command allowed me to save the database created using pg_dump into my system. Since I needed to import this data to `grocery_db2`, I ran the following command:
+```
+psql -U postgres -d grocery_db2 -p 5433 -f /db1dump.sql
+```
+ <div align="center">
+
+ ![image](https://i.imgur.com/1HXxWnR.png)
+ </div>
+
+Using the command mentioned above, I was able to successfuly import the `grocery_db1` data into `grocery_db2`. However, in order to ensure that this importation had been done, I entered into the `grocery_db2` database using the `psql` command from inside of its container. When the `\dt` commadn was run, I was able to see the `grocery_register` inside, which had been imported from the first database.
+Output:
   <div align="center">
+
+ ![image](https://i.imgur.com/Ljw5Oxm.png)
+ </div>
+
+I also ran the `SELECT * FROM grocery_register;` query to display the imported data, which allowed me to ensure that the data had truly been imported. Therefore, I concluded that this task had been completed. 
+_____________________________
+
+<div align="center">
 
 ## **Conclusion**
 </div>
